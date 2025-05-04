@@ -19,6 +19,13 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.use(express.json());
+
+// Admin portal route (must be before static middleware)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Static files middleware
 app.use(express.static('public'));
 
 let clients = [];

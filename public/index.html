@@ -171,12 +171,52 @@
       background: #a5b4fc;
       color: #fff;
     }
+    .admin-menu {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      cursor: pointer;
+      background: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .admin-portal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 1001;
+    }
+
+    .admin-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 800px;
+      height: 80vh;
+      border: none;
+      border-radius: 12px;
+      background: white;
+    }
   </style>
 </head>
 <body>
-  <a href="admin.html" title="Admin Panel" style="position:fixed;top:18px;right:18px;z-index:1000;text-decoration:none;font-size:1.7em;color:#6366f1;opacity:0.7;">
-    &#9881;
-  </a>
+  <div class="admin-menu" onclick="showAdmin()">⚙️</div>
+  <div class="admin-portal" id="adminPortal" onclick="hideAdmin(event)">
+    <iframe class="admin-frame" src="/admin"></iframe>
+  </div>
   <div class="chatbox">
     <div class="chat-header">
       <img src="igen-logo.png" alt="IGEN Logo" />
@@ -230,6 +270,16 @@
       msgElem.appendChild(bubble);
       chat.appendChild(msgElem);
       chat.scrollTop = chat.scrollHeight;
+    }
+
+    function showAdmin() {
+      document.getElementById('adminPortal').style.display = 'block';
+    }
+
+    function hideAdmin(e) {
+      if (e.target.className === 'admin-portal') {
+        document.getElementById('adminPortal').style.display = 'none';
+      }
     }
   </script>
 </body>

@@ -4,7 +4,8 @@
   "description": "IGEN FAQ Chatbot with admin portal",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "echo 'Build completed'"
   },
   "repository": {
     "type": "git",
@@ -25,5 +26,8 @@
     "nodemailer": "^6.10.0",
     "react-router-dom": "^7.1.2",
     "ws": "^8.18.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
