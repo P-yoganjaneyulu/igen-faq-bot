@@ -1,17 +1,29 @@
 {
-  "name": "igen-faq-bot",
+  "name": "project",
   "version": "1.0.0",
   "description": "IGEN FAQ Chatbot with admin portal",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/P-yoganjaneyulu/igen-faq-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/P-yoganjaneyulu/igen-faq-bot/issues"
+  },
+  "homepage": "https://github.com/P-yoganjaneyulu/igen-faq-bot#readme",
   "dependencies": {
-    "express": "^4.18.2",
-    "ws": "^8.13.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.17.16",
+    "axios": "^1.9.0",
+    "express": "^5.1.0",
+    "nodemailer": "^6.10.0",
+    "react-router-dom": "^7.1.2",
+    "ws": "^8.18.2"
   }
 }
