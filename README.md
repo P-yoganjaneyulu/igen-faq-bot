@@ -7,11 +7,6 @@ Interactive chatbot for IGEN frequently asked questions with secure admin portal
 - Secure admin portal for FAQ management
 - Basic authentication for admin access
 - Responsive design
-
-## Admin Access
-- Username: yogi
-- Password: IGEN@2025
-
 ## Tech Stack
 - Node.js & Express
 - WebSocket (ws)
