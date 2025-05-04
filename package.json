@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.17.16",
+    "axios": "^1.9.0",
+    "express": "^5.1.0",
+    "nodemailer": "^6.10.0",
+    "react-router-dom": "^7.1.2",
+    "ws": "^8.18.2"
+  }
+}
