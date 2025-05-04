@@ -2,14 +2,24 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-const faq = require('./igen-faq'); // <-- Import the Q&A
+const fs = require('fs');
+const FAQ_FILE = './faq-data.json';
+
+// Load Q/A from file
+let faq = [];
+if (fs.existsSync(FAQ_FILE)) {
+  faq = JSON.parse(fs.readFileSync(FAQ_FILE, 'utf8')).map(item => ({
+    q: new RegExp(item.q, 'i'),
+    a: item.a
+  }));
+}
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
 let clients = [];
 
@@ -28,6 +38,57 @@ function broadcast(from, text) {
     if (ws.readyState === WebSocket.OPEN) ws.send(msg);
   });
 }
+
+// Simple in-memory admin credentials (replace with env vars or DB for production)
+const ADMIN_USER = 'yogi'; // or your chosen username
+const ADMIN_PASS = 'IGEN@2025'; // or your chosen password
+
+// Middleware for basic auth
+function adminAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Basic ')) return res.status(401).send('Unauthorized');
+  const [user, pass] = Buffer.from(auth.split(' ')[1], 'base64').toString().split(':');
+  if (user === ADMIN_USER && pass === ADMIN_PASS) return next();
+  res.status(401).send('Unauthorized');
+}
+
+// Save FAQ to file
+function saveFaq() {
+  fs.writeFileSync(FAQ_FILE, JSON.stringify(
+    faq.map(item => ({
+      q: item.q instanceof RegExp ? item.q.source : item.q, // handle both RegExp and string
+      a: item.a
+    })), null, 2
+  ));
+}
+
+// Admin: Get all Q/A
+app.get('/admin/faq', adminAuth, (req, res) => {
+  res.json(
+    faq.map(item => ({
+      q: item.q.source, // send regex pattern as string
+      a: item.a
+    }))
+  );
+});
+
+// Admin: Add Q/A
+app.post('/admin/faq', adminAuth, (req, res) => {
+  const { q, a } = req.body;
+  if (!q || !a) return res.status(400).send('Missing q or a');
+  faq.push({ q: new RegExp(q, 'i'), a });
+  saveFaq();
+  res.send({ success: true });
+});
+
+// Admin: Remove Q/A by index
+app.delete('/admin/faq/:index', adminAuth, (req, res) => {
+  const idx = parseInt(req.params.index, 10);
+  if (isNaN(idx) || idx < 0 || idx >= faq.length) return res.status(400).send('Invalid index');
+  faq.splice(idx, 1);
+  saveFaq();
+  res.send({ success: true });
+});
 
 // API: Receive user message and respond as IGEN bot
 app.post('/send', async (req, res) => {

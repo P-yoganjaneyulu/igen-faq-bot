@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IGEN FAQ Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f8fafc; }
+    .menu-icon {
+      position: fixed; top: 16px; right: 16px; font-size: 2em; cursor: pointer; z-index: 10;
+    }
+    .modal, .admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 20; }
+    .modal-content, .admin-content {
+      background: #fff; padding: 2em; border-radius: 8px; min-width: 300px; max-width: 90vw;
+    }
+    .admin-content { min-width: 350px; }
+    .qalist {
+      margin: 1em 0;
+      max-height: 300px;    /* Set your preferred height */
+      overflow-y: auto;     /* Enable vertical scrolling */
+    }
+    .qaitem { border-bottom: 1px solid #eee; padding: 0.5em 0; display: flex; justify-content: space-between; align-items: center; }
+    .qaitem button { background: #e74c3c; color: #fff; border: none; border-radius: 4px; padding: 0.2em 0.7em; cursor: pointer; }
+    .add-form input, .add-form textarea { width: 100%; margin-bottom: 0.5em; }
+    .close-btn { float: right; cursor: pointer; color: #888; font-size: 1.2em; }
+    @media (max-width: 500px) {
+      .modal-content, .admin-content { padding: 1em; min-width: 90vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-icon" id="menuBtn">&#9776;</div>
+
+  <!-- Login Modal -->
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeLogin">&times;</span>
+      <h2>Admin Login</h2>
+      <input type="text" id="adminUser" placeholder="Username" autocomplete="username">
+      <input type="password" id="adminPass" placeholder="Password" autocomplete="current-password">
+      <button id="loginBtn">Login</button>
+      <div id="loginMsg" style="color:red;margin-top:0.5em;"></div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-content">
+      <span class="close-btn" id="closeAdmin">&times;</span>
+      <h2>Manage FAQ</h2>
+      <form class="add-form" id="addForm">
+        <input type="text" id="newQ" placeholder="Question (regex allowed)" required>
+        <textarea id="newA" placeholder="Answer" required></textarea>
+        <button type="submit">Add Q/A</button>
+      </form>
+      <div class="qalist" id="qaList"></div>
+    </div>
+  </div>
+
+  <script>
+    // Elements
+    const menuBtn = document.getElementById('menuBtn');
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const loginBtn = document.getElementById('loginBtn');
+    const adminPanel = document.getElementById('adminPanel');
+    const closeAdmin = document.getElementById('closeAdmin');
+    const loginMsg = document.getElementById('loginMsg');
+    const addForm = document.getElementById('addForm');
+    const qaList = document.getElementById('qaList');
+    let authHeader = '';
+
+    // Show login modal
+    menuBtn.onclick = () => { loginModal.style.display = 'flex'; };
+    closeLogin.onclick = () => { loginModal.style.display = 'none'; loginMsg.textContent = ''; };
+
+    // Login
+    loginBtn.onclick = async () => {
+      const user = document.getElementById('adminUser').value;
+      const pass = document.getElementById('adminPass').value;
+      authHeader = 'Basic ' + btoa(user + ':' + pass);
+      // Try to fetch Q/A as login test
+      const res = await fetch('/admin/faq', { headers: { Authorization: authHeader } });
+      if (res.ok) {
+        loginModal.style.display = 'none';
+        showAdminPanel();
+      } else {
+        loginMsg.textContent = 'Invalid credentials';
+      }
+    };
+
+    // Show admin panel
+    function showAdminPanel() {
+      adminPanel.style.display = 'flex';
+      loadQA();
+    }
+    closeAdmin.onclick = () => { adminPanel.style.display = 'none'; };
+
+    // Load Q/A
+    async function loadQA() {
+      qaList.innerHTML = 'Loading...';
+      const res = await fetch('/admin/faq', { headers: { Authorization: authHeader } });
+      if (!res.ok) { qaList.innerHTML = 'Failed to load.'; return; }
+      const data = await res.json();
+      qaList.innerHTML = '';
+      data.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'qaitem';
+        div.innerHTML = `<div><b>Q:</b> ${item.q} <br><b>A:</b> ${item.a}</div>
+          <button onclick="deleteQA(${idx})">Delete</button>`;
+        qaList.appendChild(div);
+      });
+    }
+
+    // Add Q/A
+    addForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const q = document.getElementById('newQ').value;
+      const a = document.getElementById('newA').value;
+      const res = await fetch('/admin/faq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader },
+        body: JSON.stringify({ q, a })
+      });
+      if (res.ok) {
+        addForm.reset();
+        loadQA();
+      } else {
+        alert('Failed to add Q/A');
+      }
+    };
+
+    // Delete Q/A
+    window.deleteQA = async (idx) => {
+      if (!confirm('Delete this Q/A?')) return;
+      const res = await fetch('/admin/faq/' + idx, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader }
+      });
+      if (res.ok) loadQA();
+      else alert('Failed to delete');
+    };
+  </script>
+</body>
+</html>
