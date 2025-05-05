@@ -1,0 +1,4 @@
+node_modules/
+.env
+chat-history/
+*.log

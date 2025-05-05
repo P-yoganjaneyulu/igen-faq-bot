@@ -107,12 +107,21 @@
       border: 1px solid #e0e7ff;
       align-self: flex-start;
     }
+    .msg.admin .bubble {
+      background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      border-bottom-left-radius: 6px;
+      border-top-left-radius: 6px;
+    }
     .msg img {
       width: 32px;
       height: 32px;
       border-radius: 50%;
       background: #e0e7ff;
       box-shadow: 0 1px 4px rgba(99,102,241,0.07);
+    }
+    .msg.admin img {
+      background: #4338ca;
     }
     .input-area {
       display: flex;
@@ -171,52 +180,9 @@
       background: #a5b4fc;
       color: #fff;
     }
-    .admin-menu {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      cursor: pointer;
-      background: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .admin-portal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.5);
-      z-index: 1001;
-    }
-
-    .admin-frame {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 800px;
-      height: 80vh;
-      border: none;
-      border-radius: 12px;
-      background: white;
-    }
   </style>
 </head>
 <body>
-  <div class="admin-menu" onclick="showAdmin()">⚙️</div>
-  <div class="admin-portal" id="adminPortal" onclick="hideAdmin(event)">
-    <iframe class="admin-frame" src="/admin"></iframe>
-  </div>
   <div class="chatbox">
     <div class="chat-header">
       <img src="igen-logo.png" alt="IGEN Logo" />
@@ -228,29 +194,85 @@
       <button type="submit">Send</button>
     </form>
   </div>
+  <button id="resetChat" class="reset-btn" onclick="resetChat()">Reset Chat</button>
   <script>
+    let sessionId = null;
     const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
     const chat = document.getElementById('chat');
     const msgInput = document.getElementById('msg');
 
     ws.onmessage = e => {
       try {
-        const { from, text } = JSON.parse(e.data);
-        addMsg(from, text, 'bot');
-      } catch {}
+        const data = JSON.parse(e.data);
+        console.log('WebSocket message received:', data);
+        
+        if (data.type === 'session') {
+          sessionId = data.sessionId;
+          console.log('Session established:', sessionId);
+          if (data.history) {
+            data.history.forEach(msg => {
+              addMsg(msg.from, msg.text, msg.from === 'Admin' ? 'admin' : 'user');
+            });
+          }
+          return;
+        }
+        
+        if (data.type === 'message') {
+          console.log('Adding message to UI:', data);
+          addMsg(data.from, data.text, data.from === 'Admin' ? 'admin' : 'user');
+        }
+      } catch (err) {
+        console.error('WebSocket error:', err);
+      }
     };
 
     function sendMsg(e) {
       e.preventDefault();
       const msg = msgInput.value.trim();
-      if (!msg) return;
+      if (!msg || !sessionId) return;
+
+      // Don't add message to UI here - let WebSocket handle it
       fetch('/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: msg })
+        body: JSON.stringify({ text: msg, sessionId })
       });
-      addMsg('You', msg, 'user');
+
       msgInput.value = '';
+    }
+
+    async function resetChat() {
+      if (!sessionId || !confirm('Are you sure you want to reset the chat?')) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/reset-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+
+        if (res.ok) {
+          // Clear UI
+          chat.innerHTML = '';
+          
+          // Close current WebSocket
+          if (ws) {
+            ws.close();
+          }
+
+          // Reload page to establish new session
+          window.location.reload();
+        } else {
+          const error = await res.text();
+          console.error('Failed to reset chat:', error);
+          alert('Failed to reset chat. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error resetting chat:', error);
+        alert('Failed to reset chat. Please try again.');
+      }
     }
 
     function addMsg(sender, text, type) {
@@ -258,8 +280,8 @@
       msgElem.classList.add('msg', type);
 
       const avatar = document.createElement('img');
-      avatar.src = type === 'bot'
-        ? 'https://img.icons8.com/color/48/robot-2.png'
+      avatar.src = type === 'admin'
+        ? 'https://img.icons8.com/color/48/administrator-male--v1.png'
         : 'https://img.icons8.com/ios-filled/50/user-male-circle.png';
 
       const bubble = document.createElement('div');
@@ -270,16 +292,6 @@
       msgElem.appendChild(bubble);
       chat.appendChild(msgElem);
       chat.scrollTop = chat.scrollHeight;
-    }
-
-    function showAdmin() {
-      document.getElementById('adminPortal').style.display = 'block';
-    }
-
-    function hideAdmin(e) {
-      if (e.target.className === 'admin-portal') {
-        document.getElementById('adminPortal').style.display = 'none';
-      }
     }
   </script>
 </body>
