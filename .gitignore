@@ -3,6 +3,8 @@ node_modules/
 
 # Environment variables
 .env
+*.env
+!.env.example
 
 # System files
 .DS_Store
@@ -12,7 +14,3 @@ AppData/
 # Runtime data
 storage/
 *.jtx
-
-# IDE files
-.vscode/
-.idea/
