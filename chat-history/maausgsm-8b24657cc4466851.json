@@ -1,0 +1,20 @@
+[
+  {
+    "type": "message",
+    "from": "User",
+    "text": "hello",
+    "timestamp": "2025-05-05T09:03:35.736Z"
+  },
+  {
+    "type": "message",
+    "from": "User",
+    "text": "what are you doing",
+    "timestamp": "2025-05-05T09:12:19.020Z"
+  },
+  {
+    "type": "message",
+    "from": "User",
+    "text": "hi",
+    "timestamp": "2025-05-05T09:19:28.558Z"
+  }
+]

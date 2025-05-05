@@ -1,4 +1,18 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-chat-history/
+
+# System files
+.DS_Store
+AppData/
 *.log
+
+# Runtime data
+storage/
+*.jtx
+
+# IDE files
+.vscode/
+.idea/
