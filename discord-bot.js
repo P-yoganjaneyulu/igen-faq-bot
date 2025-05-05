@@ -43,4 +43,4 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-client.login('REDACTED');
+client.login(process.env.DISCORD_BOT_TOKEN);
